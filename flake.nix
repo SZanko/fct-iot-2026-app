@@ -54,6 +54,7 @@
               patchelf
               zlib
               self.formatter.${system}
+              android-tools
             ];
           };
         }
