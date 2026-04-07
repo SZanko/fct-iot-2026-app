@@ -30,7 +30,11 @@ kotlin {
         }
     }
 
-    jvm()
+    jvm {
+        mainRun {
+            mainClass = "pt.nova.fct.iot.navigation.MainKt"
+        }
+    }
 
     sourceSets {
         androidMain.dependencies {
@@ -50,6 +54,14 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
+
+
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.cio)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
+
+            implementation(libs.kotlin.logging)
         }
 
         commonTest.dependencies {
