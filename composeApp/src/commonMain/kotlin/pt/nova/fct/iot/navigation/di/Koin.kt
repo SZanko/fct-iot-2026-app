@@ -1,27 +1,22 @@
 package pt.nova.fct.iot.navigation.di
 
+import de.jensklingenberg.ktorfit.Ktorfit
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.http.ContentType
-import io.ktor.http.ContentType.Application.Json
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
 import org.koin.core.module.Module
-import org.koin.core.module.dsl.createdAtStart
-import org.koin.core.module.dsl.withOptions
 import org.koin.dsl.KoinAppDeclaration
-import org.koin.dsl.bind
 import org.koin.dsl.includes
 import org.koin.dsl.module
 import org.koin.mp.KoinPlatform
-import org.koin.plugin.module.dsl.create
-import org.koin.plugin.module.dsl.single
-import org.koin.plugin.module.dsl.viewModel
 import pt.nova.fct.iot.navigation.services.OsmApi
 import pt.nova.fct.iot.navigation.services.OsmService
+import pt.nova.fct.iot.navigation.services.createOsmApi
 
 interface PlatformComponent {
     fun getInfo(): String
@@ -34,8 +29,10 @@ val nativeComponentModule = module {
 }
 
 val dataModule = module {
-    single { create(::buildClient) }
-    single<OsmService>() bind OsmService::class
+    single { buildClient() }
+    single { buildOsmKtorfit(get()) }
+    single<OsmApi> { get<Ktorfit>().createOsmApi() }
+    single { OsmService(get()) }
     //single<InMemoryMuseumStorage>() bind MuseumStorage::class
     //single<MuseumRepository>() withOptions { createdAtStart() }
 }
@@ -49,6 +46,11 @@ private fun buildClient(): HttpClient {
         }
     }
 }
+
+private fun buildOsmKtorfit(client: HttpClient): Ktorfit = Ktorfit.Builder()
+    .baseUrl("https://overpass-api.de/api/")
+    .httpClient(client)
+    .build()
 
 val viewModelModule = module {
     //viewModel<ListViewModel>()

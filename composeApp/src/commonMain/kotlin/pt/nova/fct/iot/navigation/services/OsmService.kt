@@ -1,32 +1,25 @@
 package pt.nova.fct.iot.navigation.services
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.HttpClient
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
-import io.ktor.client.utils.EmptyContent.contentType
-import io.ktor.http.ContentType
-import io.ktor.http.cio.Request
-import io.ktor.http.contentType
-import io.ktor.http.formUrlEncode
+import kotlinx.coroutines.delay
+import kotlinx.serialization.json.Json
+import pt.nova.fct.iot.navigation.dto.OverpassResponse
 
-
-class OsmService (
-    private val client: HttpClient
-) : OsmApi {
+class OsmService(
+    private val osmApi: OsmApi
+) {
 
     companion object {
         private val log = KotlinLogging.logger {}
+        private val json = Json { ignoreUnknownKeys = true }
+        private const val MAX_REENQUEUES = 3
     }
 
-
     suspend fun getNearestPublicTransportSpot(
-        around: Int = 500,
+        around: Int = 50,
         latitude: Float,
         longitude: Float
-    ): String {
+    ): OverpassResponse {
         // (around:500,38.672817,-9.232244)
 
         val query = """
@@ -39,24 +32,50 @@ class OsmService (
     """.trimIndent()
 
 
-        try {
-            val response: HttpResponse = client.post("https://overpass-api.de/api/interpreter") {
-                contentType(ContentType.Application.FormUrlEncoded)
-                setBody(
-                    listOf("data" to query).formUrlEncode()
-                )
+        return try {
+            fetchOverpassResponse(query).also { response ->
+                log.info { "Fetched ${response.elements.size} nearby stops from Overpass" }
+            }
+        } catch (e: Exception) {
+            log.error(e) { "Failed to query Overpass API" }
+            throw e
+        }
+    }
+
+    private suspend fun fetchOverpassResponse(query: String): OverpassResponse {
+        repeat(MAX_REENQUEUES + 1) { attempt ->
+            val rawResponse = osmApi.getNearestPublicTransportSpot(query).trim()
+
+            if (rawResponse.startsWith("{")) {
+                return json.decodeFromString<OverpassResponse>(rawResponse)
             }
 
-            val body = response.bodyAsText()
-            log.info { body }
+            if (isServerBusyResponse(rawResponse)) {
+                check(attempt != MAX_REENQUEUES) {
+                    "Overpass API stayed overloaded after ${MAX_REENQUEUES + 1} attempts. " +
+                        "Last response started with: ${rawResponse.take(160)}"
+                }
 
-        } catch (e: Exception) {
-            println("Error: ${e.message}")
-        } finally {
-            client.close()
+                val retryDelayMs = (attempt + 1) * 1_000L
+                log.warn {
+                    "Overpass API is busy. Re-enqueueing request ${attempt + 1}/$MAX_REENQUEUES in ${retryDelayMs}ms"
+                }
+                delay(retryDelayMs)
+                return@repeat
+            }
+
+            throw IllegalStateException(
+                "Overpass API returned a non-JSON response: ${rawResponse.take(160)}"
+            )
         }
 
+        error("Unreachable Overpass retry state")
+    }
 
-        return "test";
+    private fun isServerBusyResponse(rawResponse: String): Boolean {
+        return rawResponse.startsWith("<?xml") ||
+            rawResponse.startsWith("<html") ||
+            rawResponse.contains("The server is probably too busy", ignoreCase = true) ||
+            rawResponse.contains("Dispatcher_Client::request_read_and_idx::timeout", ignoreCase = true)
     }
 }
