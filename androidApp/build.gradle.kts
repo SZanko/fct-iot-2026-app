@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeCompiler)
+    //alias(libs.plugins.androidx.room)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -45,4 +47,7 @@ dependencies {
     debugImplementation(libs.compose.uiTooling)
 
     implementation(libs.koin.android)
+
+    implementation(libs.androidx.room.sqlite.wrapper)
+
 }

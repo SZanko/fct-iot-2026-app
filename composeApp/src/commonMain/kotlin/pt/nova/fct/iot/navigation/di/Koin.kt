@@ -11,9 +11,9 @@ import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
 import org.koin.core.module.Module
 import org.koin.dsl.KoinAppDeclaration
-import org.koin.dsl.includes
 import org.koin.dsl.module
 import org.koin.mp.KoinPlatform
+import pt.nova.fct.iot.navigation.db.AppDatabase
 import pt.nova.fct.iot.navigation.services.OsmApi
 import pt.nova.fct.iot.navigation.services.OsmService
 import pt.nova.fct.iot.navigation.services.createOsmApi
@@ -33,6 +33,7 @@ val dataModule = module {
     single { buildOsmKtorfit(get()) }
     single<OsmApi> { get<Ktorfit>().createOsmApi() }
     single { OsmService(get()) }
+    single { get<AppDatabase>().busStopDao() }
     //single<InMemoryMuseumStorage>() bind MuseumStorage::class
     //single<MuseumRepository>() withOptions { createdAtStart() }
 }
@@ -63,8 +64,12 @@ val appModule = module {
 private val log = KotlinLogging.logger {  }
 
 fun initKoin(configuration: KoinAppDeclaration? = null) {
+    if (runCatching { KoinPlatform.getKoin() }.isSuccess) {
+        return
+    }
+
     startKoin {
-        includes(configuration)
+        configuration?.invoke(this)
         modules(appModule)
         printLogger(Level.DEBUG)
     }
