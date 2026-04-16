@@ -18,23 +18,23 @@ fun main() {
     initKoin()
 
     val startupScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    startupScope.launch {
-        runCatching {
-            KoinPlatform.getKoin().get<OsmService>().getNearestPublicTransportSpot(
-                latitude = 38.672817f,
-                longitude = -9.232244f,
-            )
-        }.onSuccess { response ->
-            log.info { "Startup OSM response contains ${response.elements.size} stops" }
-            response.elements.firstOrNull()?.let { firstStop ->
-                val firstStopName = firstStop.tags["name"]
-                val firstStopRef = firstStop.tags["ref"]
-                log.info { "First stop: id=${firstStop.id}, name=$firstStopName, ref=$firstStopRef" }
-            }
-        }.onFailure { error ->
-            log.error(error) { "Failed to fetch startup OSM response" }
-        }
-    }
+    //startupScope.launch {
+    //    runCatching {
+    //        KoinPlatform.getKoin().get<OsmService>().getNearestPublicTransportSpot(
+    //            latitude = 38.672817f,
+    //            longitude = -9.232244f,
+    //        )
+    //    }.onSuccess { response ->
+    //        log.info { "Startup OSM response contains ${response.elements.size} stops" }
+    //        response.elements.firstOrNull()?.let { firstStop ->
+    //            val firstStopName = firstStop.tags["name"]
+    //            val firstStopRef = firstStop.tags["ref"]
+    //            log.info { "First stop: id=${firstStop.id}, name=$firstStopName, ref=$firstStopRef" }
+    //        }
+    //    }.onFailure { error ->
+    //        log.error(error) { "Failed to fetch startup OSM response" }
+    //    }
+    //}
 
     application {
         Window(

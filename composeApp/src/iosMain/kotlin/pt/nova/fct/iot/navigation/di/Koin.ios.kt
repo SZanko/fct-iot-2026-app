@@ -10,6 +10,8 @@ import platform.Foundation.NSFileManager
 import platform.Foundation.NSUserDomainMask
 import pt.nova.fct.iot.navigation.db.AppDatabase
 import pt.nova.fct.iot.navigation.db.buildAppDatabase
+import pt.nova.fct.iot.navigation.services.IosLocationProvider
+import pt.nova.fct.iot.navigation.services.LocationProvider
 
 class IOSComponent : PlatformComponent {
     override fun getInfo(): String = "iOS"
@@ -17,6 +19,7 @@ class IOSComponent : PlatformComponent {
 
 actual fun platformModule(): Module = module {
     single<PlatformComponent> { IOSComponent() }
+    single<LocationProvider> { IosLocationProvider() }
     single { buildAppDatabase(getDatabaseBuilder()) }
 }
 

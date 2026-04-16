@@ -7,6 +7,8 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 import pt.nova.fct.iot.navigation.db.AppDatabase
 import pt.nova.fct.iot.navigation.db.buildAppDatabase
+import pt.nova.fct.iot.navigation.services.AndroidLocationProvider
+import pt.nova.fct.iot.navigation.services.LocationProvider
 
 class AndroidComponent : PlatformComponent {
     override fun getInfo(): String = "Android OS"
@@ -14,6 +16,7 @@ class AndroidComponent : PlatformComponent {
 
 actual fun platformModule(): Module = module {
     single<PlatformComponent> { AndroidComponent() }
+    single<LocationProvider> { AndroidLocationProvider(get()) }
     single { buildAppDatabase(getDatabaseBuilder(get())) }
 }
 

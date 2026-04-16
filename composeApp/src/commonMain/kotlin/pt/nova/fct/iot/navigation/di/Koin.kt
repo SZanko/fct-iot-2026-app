@@ -10,12 +10,17 @@ import kotlinx.serialization.json.Json
 import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
 import org.koin.core.module.Module
+import org.koin.core.qualifier.named
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.module
 import org.koin.mp.KoinPlatform
 import pt.nova.fct.iot.navigation.db.AppDatabase
+import pt.nova.fct.iot.navigation.services.CarrisApi
+import pt.nova.fct.iot.navigation.services.CarrisService
+import pt.nova.fct.iot.navigation.services.NearestBusStopService
 import pt.nova.fct.iot.navigation.services.OsmApi
 import pt.nova.fct.iot.navigation.services.OsmService
+import pt.nova.fct.iot.navigation.services.createCarrisApi
 import pt.nova.fct.iot.navigation.services.createOsmApi
 
 interface PlatformComponent {
@@ -30,9 +35,13 @@ val nativeComponentModule = module {
 
 val dataModule = module {
     single { buildClient() }
-    single { buildOsmKtorfit(get()) }
-    single<OsmApi> { get<Ktorfit>().createOsmApi() }
+    single(named(OSM_KTORFIT)) { buildOsmKtorfit(get()) }
+    single(named(CARRIS_KTORFIT)) { buildCarrisKtorfit(get()) }
+    single<OsmApi> { get<Ktorfit>(named(OSM_KTORFIT)).createOsmApi() }
+    single<CarrisApi> { get<Ktorfit>(named(CARRIS_KTORFIT)).createCarrisApi() }
     single { OsmService(get()) }
+    single { CarrisService(get()) }
+    single { NearestBusStopService(get(), get(), get()) }
     single { get<AppDatabase>().busStopDao() }
     //single<InMemoryMuseumStorage>() bind MuseumStorage::class
     //single<MuseumRepository>() withOptions { createdAtStart() }
@@ -49,7 +58,13 @@ private fun buildClient(): HttpClient {
 }
 
 private fun buildOsmKtorfit(client: HttpClient): Ktorfit = Ktorfit.Builder()
-    .baseUrl("https://overpass-api.de/api/")
+    //.baseUrl("https://overpass-api.de/api/")
+    .baseUrl("https://overpass.private.coffee/api/")
+    .httpClient(client)
+    .build()
+
+private fun buildCarrisKtorfit(client: HttpClient): Ktorfit = Ktorfit.Builder()
+    .baseUrl("https://api.carrismetropolitana.pt/v2/")
     .httpClient(client)
     .build()
 
@@ -74,9 +89,9 @@ fun initKoin(configuration: KoinAppDeclaration? = null) {
         printLogger(Level.DEBUG)
     }
 
-    //val nativeComponent = KoinPlatform.getKoin().get<NativeComponent>().getInfo()
-    //log.info{"-- Expect/Actual Definition -- Running on: $nativeComponent"}
-
     val platformInfo = KoinPlatform.getKoin().get<PlatformComponent>().getInfo()
-    log.info { "-- Expect/Actual Module's + Interface Definition -- Running on: $platformInfo" }
+    log.info { "-- Expect/Actual Module and Interface Definition -- Running on: $platformInfo" }
 }
+
+private const val OSM_KTORFIT = "osmKtorfit"
+private const val CARRIS_KTORFIT = "carrisKtorfit"

@@ -5,29 +5,32 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Stop(
-    @SerialName("estimated_arrival")
-    val estimatedArrival: String?,
-    @SerialName("estimated_arrival_unix")
-    val estimatedArrivalUnix: Long?,
-    val headsign: String,
-    @SerialName("line_id")
-    val lineId: String,
-    @SerialName("observed_arrival")
-    val observedArrival: String?,
-    @SerialName("observed_arrival_unix")
-    val observedArrivalUnix: Long?,
-    @SerialName("pattern_id")
-    val patternId: String,
-    @SerialName("route_id")
-    val routeId: String,
-    @SerialName("scheduled_arrival")
-    val scheduledArrival: String,
-    @SerialName("scheduled_arrival_unix")
-    val scheduledArrivalUnix: Long,
-    @SerialName("stop_sequence")
-    val stopSequence: Long,
-    @SerialName("trip_id")
-    val tripId: String,
-    @SerialName("vehicle_id")
-    val vehicleId: String?,
+    val id: String,
+    val lat: Double,
+    val lon: Double,
+    @SerialName("long_name")
+    val longName: String,
+    @SerialName("short_name")
+    val shortName: String? = null,
+    @SerialName("tts_name")
+    val ttsName: String? = null,
+    @SerialName("line_ids")
+    val lineIds: List<String> = emptyList(),
+    @SerialName("route_ids")
+    val routeIds: List<String> = emptyList(),
+    @SerialName("pattern_ids")
+    val patternIds: List<String> = emptyList(),
+    @SerialName("district_id")
+    val districtId: String? = null,
+    @SerialName("locality_id")
+    val localityId: String? = null,
+    @SerialName("municipality_id")
+    val municipalityId: String? = null,
+    @SerialName("region_id")
+    val regionId: String? = null,
+    @SerialName("operational_status")
+    val operationalStatus: String? = null,
+    val facilities: List<String> = emptyList(),
+    @SerialName("wheelchair_boarding")
+    val wheelchairBoarding: Boolean? = null,
 )

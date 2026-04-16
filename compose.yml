@@ -1,0 +1,16 @@
+services:
+  overpass_monaco:
+    image: wiktorn/overpass-api
+    container_name: overpass_monaco
+    ports:
+      - "12345:80"
+    environment:
+      OVERPASS_META: "yes"
+      OVERPASS_MODE: "init"
+      OVERPASS_PLANET_URL: "https://download.geofabrik.de/europe/portugal-latest.osm.pbf"
+      OVERPASS_DIFF_URL: "https://download.openstreetmap.fr/replication/europe/portugal/minute/"
+      OVERPASS_RULES_LOAD: "10"
+    volumes:
+      - /big/docker/overpass_db/:/db
+    stdin_open: true
+    tty: true

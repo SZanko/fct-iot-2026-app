@@ -7,6 +7,8 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 import pt.nova.fct.iot.navigation.db.AppDatabase
 import pt.nova.fct.iot.navigation.db.buildAppDatabase
+import pt.nova.fct.iot.navigation.services.JvmLocationProvider
+import pt.nova.fct.iot.navigation.services.LocationProvider
 
 class JvmComponent() : PlatformComponent {
     override fun getInfo(): String = "Jvm"
@@ -14,12 +16,12 @@ class JvmComponent() : PlatformComponent {
 
 actual fun platformModule() : Module = module {
     single<PlatformComponent> { JvmComponent() }
+    single<LocationProvider> { JvmLocationProvider() }
     single { buildAppDatabase(getDatabaseBuilder()) }
 }
 
 private fun getDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
-    // todo proper create os dependent the database and config dir
-    val configHome: String = System.getenv("XDG_CONFIG_HOME") + "/publictransportiot"
+    val configHome = System.getenv("XDG_CONFIG_HOME")?.plus("/publictransportiot")
         ?: (System.getProperty("user.home") + "/.config/publictransportiot")
     val dataDirectory = File(configHome)
     dataDirectory.mkdirs()
